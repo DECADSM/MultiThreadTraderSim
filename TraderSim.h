@@ -11,6 +11,7 @@ class Trader{
         void Activate() { _active = true; }
         void Deactivate() { _active = false; }
         void PrintActive() { std::cout << GetName() << " is " << std::to_string(GetActive()) << std::endl; }
+        int AddNumber(int a, int b) { return a + b; }
         bool GetActive() { return _active; }
         std::string GetName() { return _name; }
 };
