@@ -30,8 +30,15 @@ struct TradeInfo {
     double _price;
     OrderType type;
     int quantity;
+    std::string PrintOrderType(OrderType o)
+    {
+        if(o == OrderType::BUY)
+            return "Buy";
+        
+        return "Sell";
+    }
     void Print()
     {
-        std::cout << "Trader " << traderID << " made a trade for this price: " << _price << std::endl;
+        std::cout << "Trader " << traderID << " made a " << PrintOrderType(type) << " trade with " << quantity << " stocks with this price: " << _price << std::endl;
     }
 };

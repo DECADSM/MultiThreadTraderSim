@@ -26,12 +26,25 @@ void AddOrder(std::vector<TradeInfo> &queue, int id, double price, OrderType t, 
     queue.emplace_back(TradeInfo(id, price, t, quantity));
 }
 
+OrderType RandomOrder()
+{
+    std::random_device rd;
+    std::mt19937 gen(rd()); // seed the generator
+    std::uniform_int_distribution<> coinflip(0, 1); // Buy/Sell coinflip
+
+    if(coinflip(gen) == 0)
+        return OrderType::BUY;
+    
+    return OrderType::SELL;
+}
+
 int main()
 {
     std::random_device rd; // obtain a random number from hardware
     std::mt19937 gen(rd()); // seed the generator
-    std::uniform_int_distribution<> coinflip(0, 1); // define the range int
-    std::uniform_real_distribution<> dist(0, 100);
+    
+    std::uniform_int_distribution<> quantity(0, 100); // Random Quantity of trades
+    std::uniform_real_distribution<> price(0, 10000); //Random Price
 
     std::vector<Trader> traders;
     std::vector<std::thread> threads;
@@ -41,9 +54,8 @@ int main()
     
     for(int i = 0; i < num_trader; i++)
     {
-        double price = dist(gen);
-        
-        threads.emplace_back(AddOrder, std::ref(OrderStack), i, price);
+        OrderType order = RandomOrder();
+        threads.emplace_back(AddOrder, std::ref(OrderStack), i, price(gen), order, quantity(gen));
     }
     /*
     for(int i = 0; i < num_trader; i++)
@@ -68,16 +80,6 @@ int main()
             threads[i].join();
         }
     }
-    /*
-    for(TradeInfo t : OrderStack)
-    {
-        t.Print();
-    }
-    //*/
-    /*
-    std::thread t(print);
-    if(t.joinable())
-        t.join(); //*/
 
     std::cout << "Main thread finished" << std::endl;
     return 0;
