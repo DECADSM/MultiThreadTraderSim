@@ -20,17 +20,17 @@ void AddOrder(std::vector<TradeInfo> &queue, TradeInfo _info)
 }
 //*/
 
-void AddOrder(std::vector<TradeInfo> &queue, int id, double price)
+void AddOrder(std::vector<TradeInfo> &queue, int id, double price, OrderType t, int quantity)
 {
-    std::lock_guard<std::mutex> lock(mtx);
-    queue.emplace_back(TradeInfo(id, price));
+    std::lock_guard<std::mutex> lock(mtx); //Lock the shared resource, locking it from every thread but the one currently using it
+    queue.emplace_back(TradeInfo(id, price, t, quantity));
 }
 
 int main()
 {
     std::random_device rd; // obtain a random number from hardware
     std::mt19937 gen(rd()); // seed the generator
-    std::uniform_int_distribution<> distr(0, 100); // define the range int
+    std::uniform_int_distribution<> coinflip(0, 1); // define the range int
     std::uniform_real_distribution<> dist(0, 100);
 
     std::vector<Trader> traders;
@@ -42,6 +42,7 @@ int main()
     for(int i = 0; i < num_trader; i++)
     {
         double price = dist(gen);
+        
         threads.emplace_back(AddOrder, std::ref(OrderStack), i, price);
     }
     /*
@@ -58,17 +59,21 @@ int main()
         threads.emplace_back([&traders, i, numA, numB]() { traders[i].Activate(); traders[i].PrintActive(); std::cout << traders[i].AddNumber(numA, numB) << std::endl; });
     } 
     //*/
+    //Join all the threads back
     for(int i = 0; i < num_trader; i++)
     {
         if(threads[i].joinable())
         {
+            OrderStack[i].Print();
             threads[i].join();
         }
     }
+    /*
     for(TradeInfo t : OrderStack)
     {
         t.Print();
     }
+    //*/
     /*
     std::thread t(print);
     if(t.joinable())

@@ -17,11 +17,19 @@ class Trader{
         std::string GetName() { return _name; }
 };
 
+enum OrderType{
+    BUY,
+    SELL,
+
+};
+
 struct TradeInfo {
     public:
-    TradeInfo(int id, double price) : traderID(id), _price(price) { } 
+    TradeInfo(int id, double price, OrderType t, int q) : traderID(id), _price(price), type(t), quantity(q) { } 
     int traderID;
     double _price;
+    OrderType type;
+    int quantity;
     void Print()
     {
         std::cout << "Trader " << traderID << " made a trade for this price: " << _price << std::endl;
