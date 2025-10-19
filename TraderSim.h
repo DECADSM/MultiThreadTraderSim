@@ -42,3 +42,7 @@ struct TradeInfo {
         std::cout << "Trader " << traderID << " made a " << PrintOrderType(type) << " trade with " << quantity << " stocks with this price: " << _price << std::endl;
     }
 };
+
+class Market{
+    
+};
