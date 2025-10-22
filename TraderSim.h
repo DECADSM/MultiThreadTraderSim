@@ -1,5 +1,7 @@
 #include <string>
 #include <iostream>
+#include <vector>
+
 
 class Trader{
     private:
@@ -23,9 +25,11 @@ enum OrderType{
 
 };
 
-struct TradeInfo {
+
+
+struct TraderInfo {
     public:
-    TradeInfo(int id, double price, OrderType t, int q) : traderID(id), _price(price), type(t), quantity(q) { } 
+    TraderInfo(int id, double price, OrderType t, int q) : traderID(id), _price(price), type(t), quantity(q) { } 
     int traderID;
     double _price;
     OrderType type;
@@ -44,5 +48,13 @@ struct TradeInfo {
 };
 
 class Market{
-    
+    std::vector<TraderInfo> BuyList;
+    std::vector<TraderInfo> SellList;
+
+    void Buy(TraderInfo info);
+    void Buy(int id, double price, OrderType type, int amount);
+
+    void Sell(TraderInfo info); 
+    void Sell(int id, double price, OrderType type, int amount);
+
 };

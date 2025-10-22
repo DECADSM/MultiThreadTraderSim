@@ -1,5 +1,5 @@
 #include "TraderSim.h"
-#include <vector>
+
 #include <random>
 #include <mutex>
 #include <thread>
@@ -7,23 +7,28 @@
 std::mutex mtx;
 //command line to compile
 //g++ -std=c++20 -Wall -Wextra -Wpedantic -O2 TraderSim.cpp -o TraderSim
+
+/*
 void print()
 {
     std::cout << "Hello there from the thread." << std::endl;
 }
-/*
 void AddOrder(std::vector<TradeInfo> &queue, TradeInfo _info)
 {
     mtx.lock();
     queue.push_back(_info);
     mtx.unlock();
 }
-//*/
-
 void AddOrder(std::vector<TradeInfo> &queue, int id, double price, OrderType t, int quantity)
 {
     std::lock_guard<std::mutex> lock(mtx); //Lock the shared resource, locking it from every thread but the one currently using it
     queue.emplace_back(TradeInfo(id, price, t, quantity));
+}
+//*/
+
+void AddOrder()
+{
+
 }
 
 OrderType RandomOrder()
@@ -38,8 +43,36 @@ OrderType RandomOrder()
     return OrderType::SELL;
 }
 
+void Market::Buy(TraderInfo info)
+{
+    mtx.lock();
+    BuyList.emplace_back(info);
+    mtx.unlock();
+}
+
+void Market::Sell(TraderInfo info)
+{
+    mtx.lock();
+    SellList.emplace_back(info);
+}
+
+void Market::Buy(int id, double price, OrderType type, int amount)
+{
+    mtx.lock();
+    BuyList.emplace_back(id, price, type, amount);
+    mtx.unlock();
+}
+
+void Market::Sell(int id, double price, OrderType type, int amount)
+{
+    mtx.lock();
+    SellList.emplace_back(id, price, type, amount);
+    mtx.unlock();
+}
+
 int main()
 {
+    /*
     std::random_device rd; // obtain a random number from hardware
     std::mt19937 gen(rd()); // seed the generator
     
@@ -57,7 +90,7 @@ int main()
         OrderType order = RandomOrder();
         threads.emplace_back(AddOrder, std::ref(OrderStack), i, price(gen), order, quantity(gen));
     }
-    /*
+    
     for(int i = 0; i < num_trader; i++)
     {
         traders.emplace_back("Trader " + std::to_string(i));
@@ -70,7 +103,6 @@ int main()
         int numB = distr(gen);
         threads.emplace_back([&traders, i, numA, numB]() { traders[i].Activate(); traders[i].PrintActive(); std::cout << traders[i].AddNumber(numA, numB) << std::endl; });
     } 
-    //*/
     //Join all the threads back
     for(int i = 0; i < num_trader; i++)
     {
@@ -82,5 +114,6 @@ int main()
     }
 
     std::cout << "Main thread finished" << std::endl;
+    //*/
     return 0;
 }
