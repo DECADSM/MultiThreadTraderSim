@@ -1,9 +1,11 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <mutex>
+#include <thread>
 
-
-class Trader{
+class Trader
+{
     private:
         std::string _name;
         float _balance = 0;
@@ -19,7 +21,8 @@ class Trader{
         std::string GetName() { return _name; }
 };
 
-enum OrderType{
+enum OrderType
+{
     BUY,
     SELL,
 
@@ -27,7 +30,8 @@ enum OrderType{
 
 
 
-struct TraderInfo {
+struct TraderInfo 
+{
     public:
     TraderInfo(int id, double price, OrderType t, int q) : traderID(id), _price(price), type(t), quantity(q) { } 
     int traderID;
@@ -47,14 +51,33 @@ struct TraderInfo {
     }
 };
 
-class Market{
+class Market
+{
+    public:
+        Market(int amt)
+        {
+            //thread check
+            if(amt > std::thread::hardware_concurrency())
+            {
+                std::cout << "Asked for too many threads. Current hardware can support about " << std::thread::hardware_concurrency() << ". Please check your hardware for proper thread counts.";
+                return;
+            }
+            num_of_threads = amt;
+
+
+        }
+        void Buy(TraderInfo info);
+        void Buy(int id, double price, OrderType type, int amount);
+
+        void Sell(TraderInfo info); 
+        void Sell(int id, double price, OrderType type, int amount);
+    
+    private: 
     std::vector<TraderInfo> BuyList;
     std::vector<TraderInfo> SellList;
 
-    void Buy(TraderInfo info);
-    void Buy(int id, double price, OrderType type, int amount);
-
-    void Sell(TraderInfo info); 
-    void Sell(int id, double price, OrderType type, int amount);
-
+    std::vector<std::thread> threadPool;
+    int num_of_threads;
+    std::mutex mtx;
+    bool stop = false;
 };

@@ -1,8 +1,7 @@
 #include "TraderSim.h"
 
 #include <random>
-#include <mutex>
-#include <thread>
+
 
 std::mutex mtx;
 //command line to compile
@@ -28,7 +27,7 @@ void AddOrder(std::vector<TradeInfo> &queue, int id, double price, OrderType t, 
 
 void AddOrder()
 {
-
+    
 }
 
 OrderType RandomOrder()
@@ -72,6 +71,9 @@ void Market::Sell(int id, double price, OrderType type, int amount)
 
 int main()
 {
+    int jobsNum;
+    std::cout << "Enter the number of jobs: ";
+    std::cin >> jobsNum;
     /*
     std::random_device rd; // obtain a random number from hardware
     std::mt19937 gen(rd()); // seed the generator
