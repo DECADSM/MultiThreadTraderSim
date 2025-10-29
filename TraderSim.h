@@ -3,6 +3,10 @@
 #include <vector>
 #include <mutex>
 #include <thread>
+#include <functional>
+#include <condition_variable>
+#include <queue>
+
 
 class Trader
 {
@@ -33,8 +37,8 @@ enum OrderType
 struct TraderInfo 
 {
     public:
-    TraderInfo(int id, double price, OrderType t, int q) : traderID(id), _price(price), type(t), quantity(q) { } 
-    int traderID;
+    TraderInfo(std::thread::id id, double price, OrderType t, int q) : traderID(id), _price(price), type(t), quantity(q) { } 
+    std::thread::id traderID;
     double _price;
     OrderType type;
     int quantity;
@@ -57,27 +61,80 @@ class Market
         Market(int amt)
         {
             //thread check
-            if(amt > std::thread::hardware_concurrency())
+            if(static_cast<unsigned int>(amt) > std::thread::hardware_concurrency())
             {
                 std::cout << "Asked for too many threads. Current hardware can support about " << std::thread::hardware_concurrency() << ". Please check your hardware for proper thread counts.";
                 return;
             }
-            num_of_threads = amt;
+            
+            //creating worker threads
+            for(int i = 0; i < amt; i++)
+            {
+                while(true)
+                {
+                    std::function<void()> task;
+                    //blocking off locking code
+                    {
+                        std::unique_lock<std::mutex> lock(mtx);
 
+                        //Waiting for a new task or everything is stopped
+                        cv.wait(lock, [this] { return !threadPool.empty() || stop; });
+
+                        //trapping the threads in an infinite loop until
+                        //task list is empty and there's no more need for work
+                        if(stop && threadPool.empty())
+                            return;
+                        
+                        //Grab the next order off the queue
+                        task = std::move(OrderList.front());
+                        OrderList.pop();
+                    }
+                }
+            }
 
         }
-        void Buy(TraderInfo info);
-        void Buy(int id, double price, OrderType type, int amount);
+        ~Market()
+        {
+            //Locking queue to stop threads
+            std::unique_lock<std::mutex> lock(mtx);
+            stop = true;
 
-        void Sell(TraderInfo info); 
-        void Sell(int id, double price, OrderType type, int amount);
-    
+            cv.notify_all();
+
+            //join all threads to properly make them stop
+            for(auto& thread : threadPool)
+            {
+                thread.join();
+            }
+        }
+        void enqueue(std::function<void()> task)
+        {
+            std::unique_lock<std::mutex> lock(mtx);
+            OrderList.emplace(std::move(task));
+
+            //notify the next thread that work is ready
+            cv.notify_one();
+        }
+        void AddOrder(TraderInfo info)
+        {
+            if(info.type == OrderType::BUY)
+            {
+                std::unique_lock<std::mutex> lock(mtx);
+                BuyList.emplace_back(info);
+            }
+            else
+            {
+                std::unique_lock<std::mutex> lock(mtx);
+                SellList.emplace_back(info);
+            }
+        }
     private: 
     std::vector<TraderInfo> BuyList;
     std::vector<TraderInfo> SellList;
 
     std::vector<std::thread> threadPool;
-    int num_of_threads;
+    std::queue<std::function<void()>> OrderList;
     std::mutex mtx;
+    std::condition_variable cv;
     bool stop = false;
 };
